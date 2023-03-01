@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% include 'header.html' %}
+{% endblock %}
+
+{% block content %}
+
+<h1>Create Post</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="author" value="{{ request.user.id }}">
+    <button type="submit">Create</button>
+</form>
+
+{% endblock content %}
