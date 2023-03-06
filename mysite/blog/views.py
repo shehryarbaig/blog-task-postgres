@@ -6,6 +6,8 @@ from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.edit import DeleteView
 
+from taggit.models import Tag
+
 from .models import Post
 
 
@@ -44,7 +46,7 @@ class PostDetailView(DetailView):
 
 class PostCreateView(CreateView):
     model = Post
-    fields = ['title', 'content']
+    fields = ['title', 'content', 'tags']
     success_url = reverse_lazy('blog:home')
     template_name = 'create_post.html'
 
@@ -67,3 +69,24 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 
     def handle_no_permission(self):
         return HttpResponseForbidden()
+    
+def search_results(request):
+    query = request.GET.get('searched')
+    search_by = request.GET.get('search_by')
+
+    if search_by == 'title':
+        posts = Post.objects.filter(title__icontains=query)
+    elif search_by == 'author':
+        posts = Post.objects.filter(author__username__icontains=query)
+    elif search_by == 'tag':
+        try:
+            tag = Tag.objects.get(name=query)
+            posts = Post.objects.filter(tags=tag)
+        except:
+            posts = Post.objects.none()
+    else:
+        posts = Post.objects.none()
+    
+    context = {'posts': posts, 'query': query, 'search_by': search_by}
+    return render(request, 'search_results.html', context)
+

@@ -11,5 +11,6 @@ post_urls = [
 
 urlpatterns = [
     path('home/', views.HomePageView.as_view(), name='home'),
+    path('search', views.search_results, name='search_results'),
     path('posts/', include(post_urls)),
 ]

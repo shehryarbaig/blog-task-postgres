@@ -8,18 +8,26 @@
 
 <h1>{{ post.title }} </h1>
 <p>{{ post.author }} | {{ post.created_on }}</p>
+<div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
+  <h2 style="margin-right: 10px;">Tags:</h2>
+  {% for tag in post.tags.all %}
+  <p style="margin-right: 10px;">{{tag}} </p>
+
+  {% endfor %}
+
+</div>
 <p>{{ post.content }}</p>
 {% if user.is_authenticated and post.author == user %}
 <form method="post">
-    {% csrf_token %}
-    <label for="post_content_text">Edit Blog</label>
-    <textarea id="post_content_text" name="post_content_text">{{ post.content }}</textarea>
-    <button type="submit">Save</button>
+  {% csrf_token %}
+  <label for="post_content_text">Edit Blog</label>
+  <textarea id="post_content_text" name="post_content_text">{{ post.content }}</textarea>
+  <button type="submit">Save</button>
 </form>
 <form method="post" action="{% url 'blog:post_delete' post.pk %}">
-    {% csrf_token %}
-    <input type="submit" value="Delete">
-  </form>
+  {% csrf_token %}
+  <input type="submit" value="Delete">
+</form>
 
 {% endif %}
 
