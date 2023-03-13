@@ -24,7 +24,7 @@
   <textarea id="post_content_text" name="post_content_text">{{ post.content }}</textarea>
   <button type="submit">Save</button>
 </form>
-<form method="post" action="{% url 'blog:post_delete' post.pk %}">
+<form method="post" action="{% url 'blog:delete' post.pk %}">
   {% csrf_token %}
   <input type="submit" value="Delete">
 </form>
