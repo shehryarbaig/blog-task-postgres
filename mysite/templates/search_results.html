@@ -2,10 +2,6 @@
 
 {% block title %}Home{% endblock %}
 
-{% block header %}
-{% include 'header.html' %}
-{% endblock %}
-
 {% block content %}
 {% if user.is_authenticated %}
 
@@ -19,25 +15,20 @@
 </div>
 
 {% endif %}
-<div style="display: flex; flex-direction: column;">
-    {% if query %}
-    <h2>Search results for "{{ query }}"</h2>
-    {% if posts.count > 0 %}
-    <p>Showing results for <strong>{{ search_by }}</strong>:</p>
-    <ul>
-        {% for post in posts %}
-        <li>
-            <a style="margin-left: 20px; margin-bottom: 20px;"
-                href="{% url 'blog:post_detail' post.id  %}">{{post.title}}</a>
-             by {{ post.author }}
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p>No results found for <strong>{{ search_by }}</strong>.</p>
-    {% endif %}
-    {% endif %}
 
-</div>
+{% if search and posts %}
+<p>Search results for: "{{ search }}"</p>
+<ul>
+    {% for post in posts %}
+    <li>
+        <a style="margin-left: 20px; margin-bottom: 20px;"
+            href="{% url 'blog:post_detail' post.id  %}">{{post.title}}</a>
+        by {{ post.author }}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No results found for <strong>{{ search }}</strong>.</p>
+{% endif %}
 
 {% endblock %}

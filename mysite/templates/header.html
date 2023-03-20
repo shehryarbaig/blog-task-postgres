@@ -3,11 +3,6 @@
         <form method="get" action="{% url 'blog:search_results' %}">
                 {% csrf_token %}
                 <input type="search" placeholder="Search" name="searched">
-                <select name="search_by">
-                        <option value="title">Title</option>
-                        <option value="author">Author</option>
-                        <option value="tag">Tag</option>
-                    </select>
                 <button type="submit">Search</button>
             </form>
         <p><a href="{% url 'blog:home' %}" style="margin-right: 10px;">Home</a></p>

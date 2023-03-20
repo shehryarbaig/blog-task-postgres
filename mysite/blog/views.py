@@ -1,18 +1,28 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.http import HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy, reverse
+from django.db.models import Q
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
-from django.views.generic.edit import DeleteView
+from django.views.generic.edit import DeleteView, UpdateView
 
-
-from .models import Post, Tag
+from blog.forms import PostForm
+from blog.models import Post
 
 
 class CustomLoginRequiredMixin(LoginRequiredMixin):
     login_url = reverse_lazy('login') 
     redirect_field_name = 'redirect_to'
+
+class CustomPermissionRequiredMixin(PermissionRequiredMixin):
+        
+    def has_permission(self):
+        post = self.get_object()
+        return post.author == self.request.user
+    
+    def handle_no_permission(self):
+        return HttpResponseForbidden()
 
 
 class SignUpView(CreateView):
@@ -34,41 +44,34 @@ class PostDetailView(DetailView):
     template_name = 'post_detail.html'
     context_object_name = 'post'
 
-    def post(self, request, *args, **kwargs):
 
-        object = self.get_object()
-        if not request.user.is_authenticated:
-            return redirect('login')
+class PostUpdateView(LoginRequiredMixin, CustomPermissionRequiredMixin, UpdateView):
+    model = Post
+    form_class = PostForm
+    template_name = 'post_update.html'
 
-        form_data = request.POST
-        object.content = form_data.get('post_content_text')
-        object.save()
-
-        return HttpResponseRedirect(reverse('blog:post_detail', args=[str(self.object.id)]))
+    def get_initial(self):
+        initial = super().get_initial()
+        post = self.get_object()
+        initial['tags'] = ', '.join([tag.name for tag in post.tags.all()])
+        return initial
+    
+    def get_success_url(self):
+        return reverse_lazy('blog:post_detail', kwargs={'pk': self.object.pk})
 
 
 class PostCreateView(CustomLoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content']
+    form_class = PostForm
     success_url = reverse_lazy('blog:home')
     template_name = 'create_post.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        post = form.save(commit=False)
-        tag_names = self.request.POST.get('tag_names')
-        if tag_names:
-            tag_names_list = [name.strip() for name in tag_names.split(',')]
-            post.save()
-            for name in tag_names_list:
-                tag, created = Tag.objects.get_or_create(name=name)
-                post.tags.add(tag)
-        else:
-            post.save()
         return super().form_valid(form)
 
 
-class PostDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, CustomPermissionRequiredMixin, DeleteView):
     model = Post
     success_url = reverse_lazy('blog:home')
     permission_required = 'blog.delete_post'
@@ -77,29 +80,23 @@ class PostDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
         obj = get_object_or_404(Post, pk=self.kwargs['pk'])
         return obj
 
-    def has_permission(self):
-        post = self.get_object()
-        return post.author == self.request.user
+class PostSearchView(ListView):
+    model = Post
+    template_name = 'search_results.html'
+    context_object_name = 'posts'
+    paginate_by = 10
 
-    def handle_no_permission(self):
-        return HttpResponseForbidden()
+    def get_queryset(self):
+        searched = self.request.GET.get('searched')
+        object_list = Post.objects.filter(
+            Q(title__icontains=searched) | 
+            Q(author__username__icontains=searched) |
+            Q(tags__name__icontains=searched)
+        ).distinct()
+        
+        return object_list
     
-def search_results(request):
-    query = request.GET.get('searched')
-    search_by = request.GET.get('search_by')
-
-    if search_by == 'title':
-        posts = Post.objects.filter(title__icontains=query)
-    elif search_by == 'author':
-        posts = Post.objects.filter(author__username__icontains=query)
-    elif search_by == 'tag':
-        try:
-            tag = Tag.objects.get(name=query)
-            posts = Post.objects.filter(tags=tag)
-        except:
-            posts = Post.objects.none()
-    else:
-        posts = Post.objects.none()
-    
-    context = {'posts': posts, 'query': query, 'search_by': search_by}
-    return render(request, 'search_results.html', context)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('searched', '')
+        return context

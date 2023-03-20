@@ -1,9 +1,5 @@
 {% extends 'base.html' %}
 
-{% block header %}
-{% include 'header.html' %}
-{% endblock %}
-
 {% block content %}
 
 <h1>{{ post.title }} </h1>
@@ -18,13 +14,12 @@
 </div>
 <p>{{ post.content }}</p>
 {% if user.is_authenticated and post.author == user %}
-<form method="post">
+<form method="get" action="{% url 'blog:post_update' post.pk %}">
   {% csrf_token %}
-  <label for="post_content_text">Edit Blog</label>
-  <textarea id="post_content_text" name="post_content_text">{{ post.content }}</textarea>
-  <button type="submit">Save</button>
+  <label id="post_content_text" name="post_content_text">{{ post.content }}</label>
+  <button type="submit">Edit Blog</button>
 </form>
-<form method="post" action="{% url 'blog:delete' post.pk %}">
+<form method="post" action="{% url 'blog:post_delete' post.pk %}">
   {% csrf_token %}
   <input type="submit" value="Delete">
 </form>
