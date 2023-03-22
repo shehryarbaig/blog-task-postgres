@@ -15,12 +15,20 @@
 </div>
 
 {% endif %}
-<div style="display: flex; flex-direction: column;">
-    {% for post in post_list %}
-    <a style="margin-left: 20px; margin-bottom: 20px;" href="{% url 'blog:post_detail' post.id  %}">{{post.title}} </a>
 
+{% if search and posts %}
+<p>Search results for: "{{ search }}"</p>
+<ul>
+    {% for post in posts %}
+    <li>
+        <a style="margin-left: 20px; margin-bottom: 20px;"
+            href="{% url 'blog:post_detail' post.id  %}">{{post.title}}</a>
+        by {{ post.author }}
+    </li>
     {% endfor %}
-
-</div>
+</ul>
+{% else %}
+<p>No results found for <strong>{{ search }}</strong>.</p>
+{% endif %}
 
 {% endblock %}

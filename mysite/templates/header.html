@@ -1,4 +1,10 @@
-<div style="display: flex; flex-direction: row; align-items: center; margin-right: 50px; margin-left: 10px;">
+<div style="display: flex; flex-direction: row; justify-content: space-between;  align-items: center; margin-right: 50px; margin-left: 10px;">
+        
+        <form method="get" action="{% url 'blog:search_results' %}">
+                {% csrf_token %}
+                <input type="search" placeholder="Search" name="searched">
+                <button type="submit">Search</button>
+            </form>
         <p><a href="{% url 'blog:home' %}" style="margin-right: 10px;">Home</a></p>
     {% if user.is_authenticated %}
             <p><a href="{% url 'logout' %}" style="margin-right: 10px;">Log Out</a></p>
